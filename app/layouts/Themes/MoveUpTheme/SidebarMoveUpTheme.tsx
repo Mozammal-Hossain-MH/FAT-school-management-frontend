@@ -11,7 +11,9 @@ export default function SidebarMoveUpTheme() {
   const { isMoveUpNavbarOpen, setIsMoveUpNavbarOpen } = useMoveUpStore();
 
   //  GET USER
-  const user = {};
+  const user: { business: { name: string; logo: string } } = {
+    business: { name: "MoveUp", logo: "" },
+  };
   // GET SIDEBAR DATA
   const links = useMenu();
   const [activeMenu, setActiveMenu] = useState(
@@ -33,7 +35,7 @@ export default function SidebarMoveUpTheme() {
       data-auto={`sidebar-container-every-page`}
       className={`${
         isMoveUpNavbarOpen
-          ? activeMenu?.childrens?.length > 0
+          ? activeMenu?.childrens && activeMenu?.childrens?.length > 0
             ? "w-full"
             : "w-[70px]"
           : "w-0 md:w-full"
@@ -86,69 +88,82 @@ export default function SidebarMoveUpTheme() {
         </div>
 
         {/* MAIN MENUS  */}
-        {links
-          ?.filter((menu) => menu?.show)
-          ?.map((menu, index) => (
-            <NavLink
-              to={
-                (location?.pathname?.split("/")?.length > 1
-                  ? `/${location?.pathname?.split("/")?.at(1)}`
-                  : "/") === menu?.link
-                  ? location?.pathname
-                  : menu?.childrens?.length > 0
-                  ? menu?.childrens
-                      ?.filter((c) => c?.show)
-                      ?.at(0)
-                      ?.childrens?.filter((c) => c?.show)?.length > 0
-                    ? menu?.childrens
-                        ?.filter((c) => c?.show)
-                        ?.at(0)
-                        ?.childrens?.filter((c) => c?.show)
-                        ?.at(0)?.link
-                    : menu?.childrens?.filter((c) => c?.show)?.at(0)?.link
-                  : menu?.link
-              }
-              key={index}
-              className={`cursor-pointer hover:bg-primary-content hover:text-primary rounded-md w-[60px] h-[60px] p-1 flex flex-col justify-center items-center ${
-                (location?.pathname?.split("/")?.length > 1
-                  ? `/${location?.pathname?.split("/")?.at(1)}`
-                  : "/") === menu?.link
-                  ? "bg-primary-content text-primary"
-                  : "text-base-300"
-              }`}
-              onClick={
-                (location?.pathname?.split("/")?.length > 1
-                  ? `/${location?.pathname?.split("/")?.at(1)}`
-                  : "/") === menu?.link
-                  ? menu?.childrens?.length > 0
-                    ? () => setIsMoveUpNavbarOpen(!isMoveUpNavbarOpen)
-                    : () => setIsMoveUpNavbarOpen(false)
-                  : () => {
-                      setActiveMenu(menu);
-                      if (menu?.childrens?.length > 0) {
-                        setIsMoveUpNavbarOpen(true);
-                      } else {
-                        setIsMoveUpNavbarOpen(false);
-                      }
-                    }
-              }
-            >
-              <div className={() => `w-[30px] h-[30px]`}>
-                <menu.Icon className={`text-xl `} />
-              </div>
-              <p
-                className={`gap-x-1 text-[9px] font-semibold text-ellipsis overflow-hidden whitespace-nowrap w-full text-center`}
-              >
-                {menu?.title}
-              </p>
-            </NavLink>
-          ))}
+        {links?.filter((menu) => menu?.show)?.length > 0
+          ? links
+              ?.filter((menu) => menu?.show)
+              ?.map((menu, index) => (
+                <NavLink
+                  to={
+                    (location?.pathname?.split("/")?.length > 1
+                      ? `/${location?.pathname?.split("/")?.at(1)}`
+                      : "/") === menu?.link
+                      ? location?.pathname
+                      : menu?.childrens?.length > 0
+                      ? (() => {
+                          const firstChild = menu?.childrens?.filter(
+                            (c: any) => c?.show
+                          )?.[0];
+                          if (
+                            firstChild?.childrens &&
+                            Array.isArray(firstChild.childrens)
+                          ) {
+                            const visibleGrandChildren: { link: string }[] =
+                              firstChild.childrens.filter((c: any) => c?.show);
+                            return visibleGrandChildren.length > 0
+                              ? visibleGrandChildren?.at(0)?.link ?? "/"
+                              : menu?.childrens?.filter(
+                                  (c: any) => c?.show
+                                )?.[0]?.link ?? "/";
+                          }
+                          return (
+                            menu?.childrens?.filter((c: any) => c?.show)?.[0]
+                              ?.link ?? "/"
+                          );
+                        })()
+                      : menu?.link ?? "/"
+                  }
+                  key={index}
+                  className={`cursor-pointer hover:bg-primary-content hover:text-primary rounded-md w-[60px] h-[60px] p-1 flex flex-col justify-center items-center ${
+                    (location?.pathname?.split("/")?.length > 1
+                      ? `/${location?.pathname?.split("/")?.at(1)}`
+                      : "/") === menu?.link
+                      ? "bg-primary-content text-primary"
+                      : "text-base-300"
+                  }`}
+                  onClick={
+                    (location?.pathname?.split("/")?.length > 1
+                      ? `/${location?.pathname?.split("/")?.at(1)}`
+                      : "/") === menu?.link
+                      ? menu?.childrens?.length > 0
+                        ? () => setIsMoveUpNavbarOpen(!isMoveUpNavbarOpen)
+                        : () => setIsMoveUpNavbarOpen(false)
+                      : () => {
+                          setActiveMenu(menu);
+                          if (menu?.childrens?.length > 0) {
+                            setIsMoveUpNavbarOpen(true);
+                          } else {
+                            setIsMoveUpNavbarOpen(false);
+                          }
+                        }
+                  }
+                >
+                  <div className={`w-[30px] h-[30px]`}>
+                    <menu.Icon className={`text-xl `} />
+                  </div>
+                  <p
+                    className={`gap-x-1 text-[9px] font-semibold text-ellipsis overflow-hidden whitespace-nowrap w-full text-center`}
+                  >
+                    {menu?.title}
+                  </p>
+                </NavLink>
+              ))
+          : ""}
       </div>
 
       {/* CHILD MENUS  */}
       <div
         className={` rounded-l-[5px] bg-base-300 py-1 overflow-x-hidden overflow-y-auto scrollbar-none transition-all relative ${
-          activeMenuChild?.childrens?.length > 0
+          activeMenuChild?.childrens && activeMenuChild?.childrens?.length > 0
             ? isMoveUpNavbarOpen
               ? "w-full md:w-[210px]"
               : "w-0"
